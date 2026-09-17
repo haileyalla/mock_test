@@ -145,6 +145,11 @@ table.list tr:hover td{background:#fafafa;cursor:pointer}
 .hero .hundred::after{content:"";position:absolute;left:12%;right:9%;bottom:-4px;height:7px;border-radius:999px;background:var(--red);opacity:.82}
 .hero .tap{margin-top:35px;font-size:14px;font-weight:600;color:#9c958b}
 .page-sub{margin:0 0 24px;color:var(--mute);font-size:16px;font-weight:500}
+.name-field{max-width:320px}
+.name-field input{width:100%;max-width:320px;height:58px;font-size:18px}
+.btn.big{width:100%;height:60px;font-size:18px;margin-top:18px}
+.teacher-link{text-align:center;margin-top:22px}
+.teacher-link button{background:none;border:0;color:#9c958b;font-size:12px;text-decoration:underline;padding:6px}
 .pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
 .pick button{height:66px;border:1.6px solid var(--line);border-radius:18px;background:#fff;color:var(--navy);font-size:19px;font-weight:900;transition:.15s}
 .pick button.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 7px 18px rgba(16,42,86,.13)}
@@ -214,8 +219,9 @@ table.list tr:hover td{background:#fafafa;cursor:pointer}
   <div class="card step" id="step1">
     <h2>헤일리영어 모의 내신고사</h2>
     <p class="page-sub">이름을 입력하세요. 시험 시작 전에 선생님 승인을 받습니다.</p>
-    <div class="field"><label>이름</label><input id="inName" placeholder="예: 김하늘" autocomplete="off"></div>
-    <div class="actions"><button class="btn ghost" id="btnTeacher">선생님</button><button class="btn gold" id="btnS1" disabled>다음</button></div>
+    <div class="field name-field"><label>이름</label><input id="inName" placeholder="예: 김하늘" autocomplete="off" maxlength="12"></div>
+    <button class="btn gold big" id="btnS1" disabled>다음</button>
+    <div class="teacher-link"><button type="button" id="btnTeacher">선생님 로그인</button></div>
   </div>
   <div class="card step hide" id="step2">
     <h2>학교</h2><p class="page-sub">학교를 선택하세요.</p>
