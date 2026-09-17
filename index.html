@@ -369,8 +369,16 @@ function renderHome(){
 const schoolStr=()=>LV.level+LV.grade;   // "중1", "고2"
 const levelLabel=s=>({"중1":"중학교 1학년","중2":"중학교 2학년","중3":"중학교 3학년","고1":"고등학교 1학년","고2":"고등학교 2학년"})[s]||s;
 const nkey=(n,s)=>(n+"|"+s).replace(/\s+/g,"").toLowerCase();
+let TEST_MODE=false;
 async function lookup(){
   const name=$("#inName").value.trim(), school=schoolStr();
+  TEST_MODE=(name==="테스트");
+  if(TEST_MODE){ ROSTER_HIT=null; S.who={name:"테스트",school,cls:""}; $("#lookupMsg").textContent="";
+    const pool=Object.values(EXAMS).filter(e=>e.grade===school); if(!pool.length){ $("#lookupMsg").textContent=`${levelLabel(school)} 시험은 준비 중입니다.`; return; }
+    const books=[...new Set(pool.map(bookOf))];
+    $("#pickBook").innerHTML=books.map(b=>`<button type="button" data-b="${esc(b)}">${esc(b)}</button>`).join("");
+    $("#pickBook").querySelectorAll("button").forEach(x=>x.onclick=()=>{LV.book=x.dataset.b; const ex=pool.find(e=>bookOf(e)===LV.book); showExam(ex)});
+    goStep(4); return; }
   $("#lookupMsg").textContent="확인 중…";
   let hit=null;
   const j=await apiGet({action:"lookup",name,school});
@@ -391,11 +399,12 @@ async function lookup(){
 function showExam(ex){
   S.exam=ex;
   $("#assignTitle").textContent=`${levelLabel(S.who.school)} ${S.who.cls||""} ${S.who.name}`;
-  $("#examList").innerHTML=`<div class="exam-item sel"><b>${esc(ex.title)}</b><span>선다형 ${ex.mcq.length}문항 · 서술형 ${ex.essays.length}문항 · ${ex.minutes}분 · 1회 응시</span></div>`;
+  $("#examList").innerHTML=TEST_MODE?`<div class="exam-item sel"><b>${esc(ex.title)} <span class="badge">테스트 모드</span></b><span>선다형 5문항 + 서술형 1문항 · 10분 · 승인 없이 바로 시작 · 결과는 저장되지 않음</span></div>`:`<div class="exam-item sel"><b>${esc(ex.title)}</b><span>선다형 ${ex.mcq.length}문항 · 서술형 ${ex.essays.length}문항 · ${ex.minutes}분 · 1회 응시</span></div>`;
   $("#btnStart").onclick=requestAndStart; goStep(5);
 }
 let POLL=null;
 async function requestAndStart(){
+  if(TEST_MODE){ startExam(); return; }
   // 이미 승인된(미응시) 학생이면 바로 시작
   if(ROSTER_HIT&&ROSTER_HIT.status==="미응시"){ startExam(); return; }
   const req={id:(ROSTER_HIT&&ROSTER_HIT.id)||uid(),name:S.who.name,school:S.who.school,cls:"",exam:S.exam.id,status:"승인대기",resultId:""};
@@ -418,6 +427,7 @@ function saveRoster(r){ try{localStorage.setItem("hailey_roster",JSON.stringify(
 
 /* ================= EXAM ================= */
 function startExam(){
+  if(TEST_MODE){ const ex=S.exam; S.exam={...ex,title:ex.title+" (테스트)",mcq:ex.mcq.slice(0,5),essays:ex.essays.slice(0,1),minutes:10}; }
   S.cur=0;S.ans={};S.essay={};S.submitted=false;S.start=Date.now();S.remain=S.exam.minutes*60;
   $("#exTitle").textContent=S.exam.title; $("#exWho").textContent=`${S.who.school} ${S.who.cls} ${S.who.name}`;
   show("exam"); renderNav(); renderQ(); startTimer();
@@ -537,7 +547,8 @@ function grade(){
 }
 async function submit(auto){
   if(S.submitted) return; S.submitted=true; clearInterval(S.timerId); window.onbeforeunload=null;
-  const r=grade(); r.studentId=ROSTER_HIT?ROSTER_HIT.id:""; saveLocal(r); $("#topRight").innerHTML="";
+  const r=grade(); r.studentId=ROSTER_HIT?ROSTER_HIT.id:""; if(!TEST_MODE) saveLocal(r); $("#topRight").innerHTML="";
+  if(TEST_MODE){ renderReport(r,$("#reportCard"),[]); show("result"); toast("테스트 모드 — 결과는 저장되지 않았습니다"); return; }
   let rows=loadLocal(); const st=await apiGet({action:"stats",exam:r.exam}); if(st&&st.ok) rows=st.rows;
   if(ROSTER_HIT&&!CONFIG.API_URL){ const ro=loadRoster(); const s=ro.find(x=>x.id===ROSTER_HIT.id); if(s){s.status="응시완료";s.resultId=r.id;saveRoster(ro)} }
   renderReport(r,$("#reportCard"),rows); show("result");
