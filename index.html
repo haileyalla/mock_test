@@ -163,7 +163,7 @@ table.list tr:hover td{background:#fafafa;cursor:pointer}
 <section id="home" class="wrap hide">
   <div class="card step" id="step1">
     <h2>헤일리영어 모의 내신고사</h2>
-    <p class="page-sub">이름을 입력하세요.</p>
+    <p class="page-sub">이름을 입력하세요. 시험 시작 전에 선생님 승인을 받습니다.</p>
     <div class="field"><label>이름</label><input id="inName" placeholder="예: 김하늘" autocomplete="off"></div>
     <div class="actions"><button class="btn ghost" id="btnTeacher">선생님</button><button class="btn gold" id="btnS1" disabled>다음</button></div>
   </div>
@@ -182,6 +182,12 @@ table.list tr:hover td{background:#fafafa;cursor:pointer}
     <h2>교과서</h2><p class="page-sub">교과서를 선택하세요.</p>
     <div class="pick" id="pickBook"></div>
     <div class="actions"><button class="btn ghost" data-back="step3">이전</button><span></span></div>
+  </div>
+  <div class="card step hide" id="step6">
+    <h2>선생님 승인 대기 중</h2>
+    <p class="page-sub" id="waitName"></p>
+    <p class="mute" id="waitMsg">선생님이 승인하면 시험이 자동으로 시작됩니다. 이 화면을 닫지 마세요.</p>
+    <div class="actions"><button class="btn ghost" id="btnWaitBack">취소</button><span></span></div>
   </div>
   <div class="card step hide" id="step5">
     <h2 id="assignTitle" style="font-size:22px"></h2>
@@ -233,8 +239,13 @@ table.list tr:hover td{background:#fafafa;cursor:pointer}
       <div class="row"><button class="btn sm ghost" id="btnReload">새로고침</button><button class="btn sm ghost" id="btnCsv">CSV</button><button class="btn sm ghost" id="btnDashBack">나가기</button></div>
     </div>
     <div class="tabs" id="dashTabs"></div>
+    <div class="card" style="margin:10px 0;border:2px solid var(--gold)" id="pendingCard">
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">승인 대기 <span class="badge" id="pendingCount">0</span></h3><button class="btn sm gold" id="btnApproveAll">전체 승인</button></div>
+      <p class="mute" style="margin:6px 0 0">학생이 시험을 시작하려면 여기서 승인해야 합니다. 4초마다 자동 갱신됩니다.</p>
+      <div style="overflow-x:auto"><table class="list" id="pendingTable"></table></div>
+    </div>
     <div class="card" style="margin:10px 0" id="rosterCard">
-      <h3>학생 등록·배정 <span class="mute">(등록된 학생만 시험을 볼 수 있고, 1회만 응시)</span></h3>
+      <h3>학생 미리 등록 (선택) <span class="mute">— 미리 등록해 두면 승인 없이 바로 시작. 1회 응시</span></h3>
       <div class="row" style="align-items:flex-end">
         <div class="field" style="flex:2;min-width:220px"><label>한 줄에 한 명: 이름, 반  (반은 생략 가능)</label><textarea id="rosterIn" class="ans" style="min-height:70px" placeholder="김민준, 2반&#10;이서연"></textarea></div>
         <div class="field" style="min-width:130px"><label>학교·학년</label><select id="rosterSchool"><option value="중1">중학교 1학년</option><option value="중2">중학교 2학년</option><option value="중3">중학교 3학년</option><option value="고1">고등학교 1학년</option><option value="고2">고등학교 2학년</option></select></div>
@@ -295,6 +306,7 @@ function renderHome(){
     $("#pickGrade").querySelectorAll("button").forEach(x=>x.onclick=()=>{LV.grade=x.dataset.g;$("#pickGrade").querySelectorAll("button").forEach(y=>y.classList.toggle("active",y===x));lookup()});
     goStep(3)});
   $("#btnBackLogin").onclick=()=>{renderHome();goStep(1)};
+  $("#btnWaitBack").onclick=()=>{clearInterval(POLL);goStep(5)};
   $("#btnTeacher").onclick=()=>{show("teacher");$("#pinBox").classList.remove("hide");$("#dash").classList.add("hide")};
   $("#topRight").innerHTML="";
 }
@@ -308,12 +320,12 @@ async function lookup(){
   const j=await apiGet({action:"lookup",name,school});
   if(j&&j.ok){ hit=j.student; }
   else if(!CONFIG.API_URL){ hit=loadRoster().find(s=>nkey(s.name,s.school)===nkey(name,school))||null; }
+  else if(j&&j.error==="not registered"){ hit=null; }
   else { $("#lookupMsg").textContent="서버에 연결할 수 없습니다. 잠시 후 다시 시도하세요."; return; }
-  if(!hit){ $("#lookupMsg").textContent="등록된 학생이 아닙니다. 이름·학교·학년을 확인하거나 선생님께 문의하세요."; return; }
-  if(hit.status==="응시완료"){ $("#lookupMsg").textContent=`${hit.name} 학생은 이미 응시했습니다. 재응시는 선생님께 요청하세요.`; return; }
-  ROSTER_HIT=hit; S.who={name:hit.name,school:hit.school,cls:hit.cls||""}; $("#lookupMsg").textContent="";
+  if(hit&&hit.status==="응시완료"){ $("#lookupMsg").textContent=`${hit.name} 학생은 이미 응시했습니다. 재응시는 선생님께 요청하세요.`; return; }
+  ROSTER_HIT=hit; S.who={name,school,cls:(hit&&hit.cls)||""}; $("#lookupMsg").textContent="";
   const pool=Object.values(EXAMS).filter(e=>e.grade===school);
-  if(hit.exam&&EXAMS[hit.exam]){ showExam(EXAMS[hit.exam]); return; }      // 선생님이 특정 시험을 배정한 경우
+  if(hit&&hit.exam&&EXAMS[hit.exam]){ showExam(EXAMS[hit.exam]); return; }
   if(!pool.length){ $("#lookupMsg").textContent=`${levelLabel(school)} 시험은 준비 중입니다.`; return; }
   const books=[...new Set(pool.map(bookOf))];
   $("#pickBook").innerHTML=books.map(b=>`<button type="button" data-b="${esc(b)}">${esc(b)}</button>`).join("");
@@ -324,7 +336,26 @@ function showExam(ex){
   S.exam=ex;
   $("#assignTitle").textContent=`${levelLabel(S.who.school)} ${S.who.cls||""} ${S.who.name}`;
   $("#examList").innerHTML=`<div class="exam-item sel"><b>${esc(ex.title)}</b><span>선다형 ${ex.mcq.length}문항 · 서술형 ${ex.essays.length}문항 · ${ex.minutes}분 · 1회 응시</span></div>`;
-  $("#btnStart").onclick=startExam; goStep(5);
+  $("#btnStart").onclick=requestAndStart; goStep(5);
+}
+let POLL=null;
+async function requestAndStart(){
+  // 이미 승인된(미응시) 학생이면 바로 시작
+  if(ROSTER_HIT&&ROSTER_HIT.status==="미응시"){ startExam(); return; }
+  const req={id:(ROSTER_HIT&&ROSTER_HIT.id)||uid(),name:S.who.name,school:S.who.school,cls:"",exam:S.exam.id,status:"승인대기",resultId:""};
+  const ok=await apiPost({action:"request",student:req});
+  if(!ok&&!CONFIG.API_URL){ const ro=loadRoster(); if(!ro.some(s=>s.id===req.id)) ro.push(req); saveRoster(ro); }
+  ROSTER_HIT=req;
+  $("#waitName").textContent=`${S.who.name} · ${levelLabel(S.who.school)} · ${S.exam.title}`;
+  goStep(6);
+  clearInterval(POLL); POLL=setInterval(checkApproval,4000); checkApproval();
+}
+async function checkApproval(){
+  let hit=null;
+  const j=await apiGet({action:"lookup",name:S.who.name,school:S.who.school});
+  if(j&&j.ok) hit=j.student; else if(!CONFIG.API_URL) hit=loadRoster().find(s=>s.id===ROSTER_HIT.id)||null;
+  if(!hit){ $("#waitMsg").textContent="요청이 거절되었거나 삭제되었습니다. 선생님께 문의하세요."; clearInterval(POLL); return; }
+  if(hit.status==="미응시"){ clearInterval(POLL); ROSTER_HIT=hit; if(hit.exam&&EXAMS[hit.exam]) S.exam=EXAMS[hit.exam]; startExam(); }
 }
 function loadRoster(){ try{return JSON.parse(localStorage.getItem("hailey_roster")||"[]")}catch(e){return []} }
 function saveRoster(r){ try{localStorage.setItem("hailey_roster",JSON.stringify(r))}catch(e){} }
@@ -503,8 +534,18 @@ async function toPng(){
 $("#btnPng").onclick=async()=>{const b=await toPng(); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=`${$("#reportCard .who b")?.textContent||"결과"}_${new Date().toISOString().slice(0,10)}.png`; a.click(); toast("이미지 저장됨")};
 $("#btnShare").onclick=async()=>{const b=await toPng(); const f=new File([b],"report.png",{type:"image/png"});
   if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"모의고사 결과"})}else{$("#btnPng").click()}};
-$("#btnHome").onclick=()=>{S={exam:null,who:null,cur:0,ans:{},essay:{},start:0,timerId:null,remain:0,submitted:false};renderHome();show("home")};
+$("#btnHome").onclick=()=>{S={exam:null,who:null,cur:0,ans:{},essay:{},start:0,timerId:null,remain:0,submitted:false};ROSTER_HIT=null;$("#inName").value="";$("#btnS1").disabled=true;renderHome();goStep(1);show("home")};
 
+function kakaoText(r){
+  const ef=r.essayFinal!=null?r.essayFinal:r.essayAuto; const total=+(r.mcqScore+ef).toFixed(1);
+  const rows=Object.entries(r.areas).map(([a,v])=>({a,p:v.max?Math.round(v.got/v.max*100):0,wrong:v.wrong}));
+  const areas=rows.map(x=>`· ${shortArea(x.a)} ${x.p}%`).join("\n");
+  const wrong=r.items.filter(i=>!i.ok).map(i=>i.n).join(", ")||"없음";
+  const ess=r.essays.map(s=>s.detail.map(d=>`${s.n}${(d.label.match(/^\(\d\)/)||[""])[0]}${d.how==="hit"?"○":"✕"}`).join(" ")).join("  ");
+  const strong=rows.filter(x=>x.p>=80).map(x=>shortArea(x.a)).join(", ");
+  const weak=rows.filter(x=>x.p<=65).sort((x,y)=>x.p-y.p).slice(0,2).map(x=>`· ${shortArea(x.a)} ${x.p}% (틀린 문항 ${x.wrong.join(", ")}) → ${tipFor(x.a)}`).join("\n")||"· 전 영역 65% 이상 — 틀린 문항의 근거 문장만 다시 확인하면 됩니다";
+  return `[${CONFIG.ACADEMY} 모의 내신고사 결과]\n${r.name} (${levelLabel(r.school)}${r.cls?" "+r.cls:""}) · ${new Date(r.ts).toLocaleDateString("ko-KR")}\n시험: ${r.examTitle}\n\n▶ 총점 ${total}점 / 100\n  선다형 ${r.mcqScore}/${r.mcqMax}점 · 서술형 ${ef}/${r.essayMax}점${r.essayFinal!=null?"":" (가채점)"}\n\n▶ 영역별\n${areas}\n\n▶ 틀린 문항: ${wrong}\n▶ 서술형: ${ess}\n${strong?`\n▶ 강점: ${strong}`:""}\n\n▶ 보완할 점\n${weak}`;
+}
 /* ================= STORAGE / API ================= */
 function saveLocal(r){ try{const k="hailey_results"; const all=JSON.parse(localStorage.getItem(k)||"[]"); const i=all.findIndex(x=>x.id===r.id); if(i>=0)all[i]=r; else all.push(r); localStorage.setItem(k,JSON.stringify(all.slice(-500)));}catch(e){} }
 function loadLocal(){ try{return JSON.parse(localStorage.getItem("hailey_results")||"[]")}catch(e){return []} }
@@ -515,16 +556,27 @@ async function apiGet(params){ if(!CONFIG.API_URL) return null;
 
 /* ================= TEACHER ================= */
 let T={exam:null,rows:[],pin:"",roster:[]};
-$("#btnPin").onclick=async()=>{const p=$("#inPin").value.trim(); if(p!==CONFIG.TEACHER_PIN){toast("PIN이 틀렸습니다");return} T.pin=p; $("#pinBox").classList.add("hide"); $("#dash").classList.remove("hide"); T.exam=T.exam||Object.keys(EXAMS)[0]; await loadRows(); renderDash();};
-$("#btnPinBack").onclick=()=>{show("home");renderHome()};
-$("#btnDashBack").onclick=()=>{show("home");renderHome()};
+$("#btnPin").onclick=async()=>{const p=$("#inPin").value.trim(); if(p!==CONFIG.TEACHER_PIN){toast("PIN이 틀렸습니다");return} T.pin=p; $("#pinBox").classList.add("hide"); $("#dash").classList.remove("hide"); T.exam=T.exam||Object.keys(EXAMS)[0]; await loadRows(); renderDash();
+  clearInterval(PENDPOLL); PENDPOLL=setInterval(async()=>{ if($("#dash").classList.contains("hide")){clearInterval(PENDPOLL);return} const before=T.roster.filter(s=>s.status==="승인대기").length; await loadRows(); const after=T.roster.filter(s=>s.status==="승인대기").length; if(after!==before){renderPending();renderRoster()} },4000);};
+$("#btnPinBack").onclick=()=>{show("home");renderHome();goStep(1)};
+$("#btnDashBack").onclick=()=>{clearInterval(PENDPOLL);show("home");renderHome();goStep(1)};
 $("#btnReload").onclick=async()=>{await loadRows();renderDash();toast("불러왔습니다")};
 async function loadRows(){ const j=await apiGet({action:"results",pin:T.pin}); T.rows=(j&&j.ok)?j.rows:loadLocal(); if(!(j&&j.ok)&&CONFIG.API_URL) toast("서버 연결 실패 — 이 기기 결과만 표시");
   const s=await apiGet({action:"students",pin:T.pin}); T.roster=(s&&s.ok)?s.students:loadRoster(); }
+let PENDPOLL=null;
+function renderPending(){
+  const pend=T.roster.filter(s=>s.status==="승인대기");
+  $("#pendingCount").textContent=pend.length;
+  $("#pendingTable").innerHTML=pend.length?`<tr><th>이름</th><th>학교·학년</th><th>시험</th><th></th></tr>`+pend.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc(levelLabel(s.school))}</td><td>${esc((EXAMS[s.exam]||{}).title||"")}</td><td class="row"><button class="btn sm gold" data-ok="${s.id}">승인</button><button class="btn sm ghost" data-no="${s.id}">거절</button></td></tr>`).join(""):`<tr><td class="mute">대기 중인 학생이 없습니다.</td></tr>`;
+  $("#pendingTable").querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>rosterAction("approve",b.dataset.ok));
+  $("#pendingTable").querySelectorAll("[data-no]").forEach(b=>b.onclick=()=>rosterAction("remove",b.dataset.no));
+  $("#btnApproveAll").onclick=async()=>{for(const s of pend) await rosterAction("approve",s.id,true); await loadRows(); renderPending(); renderRoster(); toast(`${pend.length}명 승인`)};
+}
 function renderRoster(){
+  renderPending();
   const sel=$("#rosterExam"); sel.innerHTML='<option value="">학년 시험 전체 (학생이 교과서 선택)</option>'+Object.values(EXAMS).map(e=>`<option value="${e.id}">${esc(e.title)}</option>`).join("");
   const rows=T.roster.slice().sort((a,b)=>(a.exam+a.school+a.name).localeCompare(b.exam+b.school+b.name));
-  $("#rosterTable").innerHTML=`<tr><th>이름</th><th>학교·학년/반</th><th>배정 시험</th><th>상태</th><th></th></tr>`+rows.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc([s.school,s.cls].filter(Boolean).join(" "))}</td><td>${s.exam?esc((EXAMS[s.exam]||{}).title||s.exam):'<span class="mute">학년 전체(교과서 선택)</span>'}</td><td>${s.status==="응시완료"?'<span class="badge ok">응시완료</span>':'<span class="mute">미응시</span>'}</td><td class="row">${s.status==="응시완료"?`<button class="btn sm ghost" data-reset="${s.id}">재응시 허용</button>`:""}<button class="btn sm ghost" data-del="${s.id}">삭제</button></td></tr>`).join("")||`<tr><td colspan="5" class="mute">등록된 학생이 없습니다. 위에서 이름·학교를 입력하고 시험을 배정하세요.</td></tr>`;
+  $("#rosterTable").innerHTML=`<tr><th>이름</th><th>학교·학년/반</th><th>배정 시험</th><th>상태</th><th></th></tr>`+rows.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc([s.school,s.cls].filter(Boolean).join(" "))}</td><td>${s.exam?esc((EXAMS[s.exam]||{}).title||s.exam):'<span class="mute">학년 전체(교과서 선택)</span>'}</td><td>${s.status==="응시완료"?'<span class="badge ok">응시완료</span>':s.status==="승인대기"?'<span class="badge">승인대기</span>':'<span class="mute">승인됨·미응시</span>'}</td><td class="row">${s.status==="응시완료"?`<button class="btn sm ghost" data-reset="${s.id}">재응시 허용</button>`:""}<button class="btn sm ghost" data-del="${s.id}">삭제</button></td></tr>`).join("")||`<tr><td colspan="5" class="mute">등록된 학생이 없습니다. 위에서 이름·학교를 입력하고 시험을 배정하세요.</td></tr>`;
   $("#rosterTable").querySelectorAll("[data-reset]").forEach(b=>b.onclick=async()=>{await rosterAction("reset",b.dataset.reset)});
   $("#rosterTable").querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(confirm("이 학생을 삭제할까요?"))await rosterAction("remove",b.dataset.del)});
   $("#btnRegister").onclick=async()=>{
@@ -535,10 +587,11 @@ function renderRoster(){
     if(!ok){ const ro=loadRoster(); students.forEach(s=>{ if(!ro.some(x=>nkey(x.name,x.school)===nkey(s.name,s.school)&&x.exam===s.exam)) ro.push(s)}); saveRoster(ro); }
     $("#rosterIn").value=""; toast(`${students.length}명 등록${ok?"":" (이 기기)"}`); await loadRows(); renderRoster(); };
 }
-async function rosterAction(action,id){
+async function rosterAction(action,id,quiet){
   const ok=await apiPost({action,pin:T.pin,id});
   if(!ok){ let ro=loadRoster(); if(action==="remove") ro=ro.filter(s=>s.id!==id); else ro.forEach(s=>{if(s.id===id){s.status="미응시";s.resultId=""}}); saveRoster(ro); }
-  toast(action==="remove"?"삭제됨":"재응시 허용됨"); await loadRows(); renderRoster();
+  if(quiet) return;
+  toast(action==="remove"?"삭제/거절됨":action==="approve"?"승인됨":"재응시 허용됨"); await loadRows(); renderRoster();
 }
 function renderDash(){
   renderRoster();
@@ -560,7 +613,7 @@ function renderDash(){
 }
 function openGrade(id){
   const r=T.rows.find(x=>x.id===id); if(!r) return; const ex=EXAMS[r.exam]; const p=$("#gradePanel"); p.classList.remove("hide");
-  p.innerHTML=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">${esc(r.name)} — 서술형 채점</h3><div class="row"><button class="btn sm" id="gSave">점수 확정</button><button class="btn sm ghost" id="gReport">리포트 보기</button><button class="btn sm ghost" id="gClose">닫기</button></div></div>`+
+  p.innerHTML=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">${esc(r.name)} — 서술형 채점</h3><div class="row"><button class="btn sm" id="gSave">점수 확정</button><button class="btn sm ghost" id="gReport">리포트 보기</button><button class="btn sm gold" id="gCopy">카톡용 결과 복사</button><button class="btn sm ghost" id="gClose">닫기</button></div></div>`+
     ex.essays.map(e=>{const s=r.essays.find(x=>x.n===e.n)||{answer:"",auto:0,detail:[]}; const cur=s.final!=null?s.final:s.auto;
       return `<div class="grade-box"><b>서술형 ${e.n}</b> <span class="mute">[${e.pts}점]</span> ${esc(e.q)}
         <div class="model">모범답안: ${esc(e.model).replace(/\n/g,"<br>")}</div>
@@ -568,6 +621,7 @@ function openGrade(id){
         <div class="crit">${s.detail.map(d=>`<span class="${d.how==="hit"?"hit":d.how==="manual"?"":"miss"}">${esc(d.label)} ${d.got}/${d.pts}${d.how==="manual"?" (확인)":""}</span>`).join(" · ")}</div>
         <div class="row" style="margin-top:6px"><span>점수</span><input type="number" step="0.5" min="0" max="${e.pts}" value="${cur}" data-n="${e.n}"> <span class="mute">/ ${e.pts} · 자동 ${s.auto}</span></div></div>`}).join("");
   $("#gClose").onclick=()=>p.classList.add("hide");
+  $("#gCopy").onclick=async()=>{ const txt=kakaoText(r); let ta=p.querySelector("textarea.kakao"); if(!ta){ta=document.createElement("textarea"); ta.className="ans kakao"; ta.style.minHeight="240px"; ta.style.marginTop="10px"; p.appendChild(ta);} ta.value=txt; try{ await navigator.clipboard.writeText(txt); toast("복사됨 — 카톡에 붙여넣으세요"); }catch(e){ ta.select(); toast("아래 상자에서 복사하세요"); } };
   $("#gReport").onclick=()=>{const w=document.createElement("div"); w.className="card"; renderReport(r,w); p.appendChild(w); const b=document.createElement("button"); b.className="btn sm"; b.textContent="이미지 저장"; b.onclick=async()=>{const c=await html2canvas(w.querySelector(".report"),{scale:2,backgroundColor:"#fff"}); const a=document.createElement("a"); a.href=c.toDataURL("image/png"); a.download=`${r.name}_리포트.png`; a.click()}; w.prepend(b)};
   $("#gSave").onclick=async()=>{let sum=0; p.querySelectorAll("input[type=number]").forEach(i=>{const n=+i.dataset.n; const v=Math.min(+i.max,Math.max(0,+i.value||0)); const s=r.essays.find(x=>x.n===n); if(s){s.final=v} sum+=v});
     r.essayFinal=+sum.toFixed(1); r.essayPending=0; r.status="확정"; r.total=+(r.mcqScore+r.essayFinal).toFixed(1);
