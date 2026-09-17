@@ -13,7 +13,7 @@
   --line:#e7dfd1; --ok:#2e7d32; --bad:#ed3038; --warn:#906500; --card:#fffdf8; --tint:#f6f1e4;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.55;word-break:keep-all}
+html,body{margin:0;overflow-x:hidden;background:var(--paper);color:var(--ink);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.55;word-break:keep-all}
 button{font:inherit;cursor:pointer;border:0;border-radius:18px}
 input,textarea,select{font:inherit}
 .hide{display:none!important}
@@ -38,7 +38,8 @@ h2{font-size:30px;font-weight:900;letter-spacing:-.05em;line-height:1.2}
 .exam-item span{color:var(--mute);font-size:13px}
 .field{display:grid;gap:6px;margin:10px 0}
 .field label{font-size:15px;font-weight:800;color:#5f584f}
-.field input,.field select{height:64px;padding:0 20px;border:1.5px solid var(--line);border-radius:18px;font-size:18px;font-weight:600;background:#fff;color:var(--navy);outline:none}
+.field{min-width:0}
+.field input,.field select{width:100%;min-width:0;box-sizing:border-box;height:64px;padding:0 20px;border:1.5px solid var(--line);border-radius:18px;font-size:18px;font-weight:600;background:#fff;color:var(--navy);outline:none}
 .field input:focus{border-color:var(--navy);box-shadow:0 0 0 4px rgba(16,42,86,.07)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 /* exam */
@@ -90,6 +91,17 @@ u{text-decoration-thickness:2px;text-underline-offset:3px}
 .area.weak .bar i{background:var(--bad)}
 .area.strong .bar i{background:var(--ok)}
 .area b{text-align:right;font-variant-numeric:tabular-nums}
+.cohort{background:var(--tint);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:6px 0 12px;line-height:1.7}
+.diag{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.diag .ttl{font-weight:800;font-size:13px;color:var(--navy);margin-bottom:6px}
+.drow{display:grid;grid-template-columns:1fr 44px 24px;font-size:13.5px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.drow:last-child{border:0}
+.drow i{font-style:normal;color:var(--mute);text-align:right}
+.drow b{text-align:right}
+.drow.bad b{color:var(--bad)}
+.drow.ok b{color:var(--ok)}
+.tasks{margin:4px 0 0 18px;padding:0;font-size:14px}
+.tasks li{margin:2px 0}
 .verdict{border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:12px 0;margin:14px 0;font-size:14.5px}
 .verdict p{margin:0 0 6px}
 .verdict .tag{display:inline-block;font-weight:700;color:var(--navy);margin-right:6px}
@@ -140,6 +152,44 @@ table.list tr:hover td{background:#fafafa;cursor:pointer}
 .actions{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .actions .btn{width:100%}
 @media (max-width:600px){.actions{grid-template-columns:1fr}.area{grid-template-columns:96px 1fr 44px}.report .head{flex-direction:column;align-items:flex-start}.report .head .who{text-align:left}}
+
+/* ---------- phone ---------- */
+@media (max-width:600px){
+  .wrap{padding:12px}
+  .card{padding:20px 16px;border-radius:20px}
+  h2{font-size:24px}
+  .page-sub{font-size:14px;margin-bottom:16px}
+  .field input,.field select{height:56px;font-size:17px;padding:0 16px}
+  .pick{grid-template-columns:1fr 1fr;gap:10px}
+  .pick button{height:58px;font-size:17px}
+  .actions{grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .btn{height:52px;font-size:16px;padding:0 14px}
+  .hero{min-height:calc(100vh - 120px)}
+  .hero .brand{font-size:56px}
+  .hero .slogan{font-size:50px}
+  .hero .hundred{font-size:150px}
+  header.top{padding:10px 14px}
+  header.top .brand{font-size:28px}
+  .nav{grid-template-columns:repeat(8,1fr);gap:5px}
+  .nav button{height:36px;font-size:13px;border-radius:9px}
+  .passage{padding:12px 12px 12px 14px;font-size:14.5px;border-radius:12px}
+  .passage p.txt{font-size:15px;line-height:1.65}
+  .qhead{font-size:16px}
+  .opt{padding:11px 12px;font-size:15px;gap:9px;border-radius:12px}
+  .opt .c{width:26px;height:26px;font-size:13px}
+  .qnav .btn,.row .btn{flex:1}
+  .exam-item b{font-size:15px}
+  .report .body{padding:16px 14px}
+  .score{gap:12px}
+  .dial{width:110px;height:110px}
+  .dial .n b{font-size:36px}
+  .area{grid-template-columns:84px 1fr 42px;font-size:13px}
+  .wrong{font-size:12.5px}
+  table.list{font-size:12.5px}
+  table.list th,table.list td{padding:6px 5px}
+  .item{grid-template-columns:38px 1fr 70px;font-size:12px}
+  .grade-box{padding:10px}
+}
 @media print{header.top,.noprint{display:none!important}body{background:#fff}}
 </style>
 </head>
@@ -482,8 +532,9 @@ function grade(){
 async function submit(auto){
   if(S.submitted) return; S.submitted=true; clearInterval(S.timerId); window.onbeforeunload=null;
   const r=grade(); r.studentId=ROSTER_HIT?ROSTER_HIT.id:""; saveLocal(r); $("#topRight").innerHTML="";
+  let rows=loadLocal(); const st=await apiGet({action:"stats",exam:r.exam}); if(st&&st.ok) rows=st.rows;
   if(ROSTER_HIT&&!CONFIG.API_URL){ const ro=loadRoster(); const s=ro.find(x=>x.id===ROSTER_HIT.id); if(s){s.status="응시완료";s.resultId=r.id;saveRoster(ro)} }
-  renderReport(r,$("#reportCard")); show("result");
+  renderReport(r,$("#reportCard"),rows); show("result");
   const ok=await apiPost({action:"submit",result:r});
   toast(ok?"결과 저장 완료":(CONFIG.API_URL?"서버 저장 실패 — 이 기기에는 저장됨":"이 기기에 저장됨"));
 }
@@ -499,7 +550,42 @@ const AREA_TIP={
 };
 function tipFor(area){ for(const k in AREA_TIP) if(area.includes(k)) return AREA_TIP[k]; return "틀린 문항을 다시 풀고 근거 문장 찾기"; }
 function shortArea(a){ return a.replace(" · 교과서 보충","").replace("핵심 ","").replace("본문 독해 · ","통합·").replace("본문 통합 · 문법 적용","통합·문법"); }
-function renderReport(r,el){
+const GTAGS=[["가정법 과거완료",/had .*would have|과거완료/],["가정법 과거",/가정법|If I were|If .* were|would|could/],["의문사+to부정사",/의문사|how to|what to|where to|when to/],["관계대명사",/관계대명사|who |that |which /],["used to",/used to/],["by -ing",/by -ing|by \w+ing/],["현재완료",/현재완료|have (been|visited|lived|known)|has (been|lived)|ever/],["분사구문",/분사구문|Feeling|Wanting|Not knowing|Standing|Walking/],["not only A but also B",/not only/],["지각동사",/지각동사|saw .*ing|heard .*ing|smelled/],["과거진행형",/과거진행|were you doing|was reading/],["가주어 It",/가주어|It is (important|necessary|easy|hard|not easy)/],["the 비교급, the 비교급",/the 비교급|The more|The warmer|The higher|The less|The earlier|the hotter/],["최상급",/최상급|the (biggest|smallest|most|best)/],["비교급",/비교급|taller|faster|more beautiful|less/],["There is\/are",/There (is|are|was|were)/],["must not \/ don't have to",/must|have to|don't have to/],["whether",/whether|if or not/],["so that",/so that/],["in that",/in that/],["동명사",/동명사|Taking|Painting|enjoy(s|ed)? \w+ing|Going on/],["to부정사",/to부정사|to (remember|capture|express|buy|take|paint|drink)/],["재귀대명사",/재귀대명사|themselves|himself|herself|ourselves|yourself/],["be going to",/be going to|going to/],["현재분사 수식",/후치|sitting beside|giving a presentation|standing/]];
+function gtag(text){ for(const [k,re] of GTAGS){ if(re.test(text)) return k; } return null; }
+function grammarDiag(r){
+  const ex=EXAMS[r.exam]; if(!ex) return []; const m={};
+  ex.mcq.forEach(q=>{ if(!/문법/.test(q.area)) return; const k=gtag(q.q+" "+q.stem.join(" ")+" "+q.opts.join(" ")); if(!k) return; const it=r.items.find(i=>i.n===q.n); (m[k]=m[k]||{ok:0,tot:0,wrong:[]}); m[k].tot++; if(it&&it.ok) m[k].ok++; else m[k].wrong.push(q.n); });
+  ex.essays.forEach(e=>{ const s=r.essays.find(x=>x.n===e.n); if(!s) return; e.parts.forEach((p,i)=>{ const k=gtag((e.cond||"")+" "+p.answers[0]); if(!k) return; (m[k]=m[k]||{ok:0,tot:0,wrong:[]}); m[k].tot++; const d=s.detail[i]; if(d&&d.how==="hit") m[k].ok++; else m[k].wrong.push(e.n+p.label); }); });
+  return Object.entries(m).map(([k,v])=>({k,...v,p:Math.round(v.ok/v.tot*100)})).sort((a,b)=>a.p-b.p);
+}
+function cohort(r,rows){
+  const same=(rows||[]).filter(x=>x.exam===r.exam&&x.id!==r.id).map(x=>({total:+(x.mcqScore+(x.essayFinal!=null?x.essayFinal:x.essayAuto)).toFixed(1),items:x.items||[]}));
+  const mine=r.essayFinal!=null?+(r.mcqScore+r.essayFinal).toFixed(1):r.total; const all=[...same.map(s=>s.total),mine];
+  const n=all.length; const avg=+(all.reduce((a,b)=>a+b,0)/n).toFixed(1); const rank=all.filter(v=>v>mine).length+1; const top=Math.round(rank/n*100);
+  const rate={}; if(same.length){ const ex=EXAMS[r.exam]; ex.mcq.forEach(q=>{ const c=same.filter(s=>(s.items.find(i=>i.n===q.n)||{}).ok).length; rate[q.n]=Math.round(c/same.length*100); }); }
+  const myWrong=r.items.filter(i=>!i.ok).map(i=>i.n);
+  const basic=myWrong.filter(n=>rate[n]!=null&&rate[n]>=70), hardAll=myWrong.filter(n=>rate[n]!=null&&rate[n]<40);
+  return {n,avg,rank,top,mine,rate,basic,hardAll};
+}
+function verdictText(r,c,diag,weak){
+  const t=c.mine; const lv=t>=90?"매우 우수":t>=80?"우수":t>=70?"양호":t>=60?"보통":"보완 필요";
+  let s=`${r.name} 학생은 이번 ${r.examTitle} 모의고사에서 ${t}점(${lv})을 받았습니다.`;
+  if(c.n>=2) s+=` 같은 시험을 본 ${c.n}명 중 ${c.rank}등, 평균(${c.avg}점) 대비 ${t-c.avg>=0?"+":""}${(t-c.avg).toFixed(1)}점입니다.`;
+  if(c.basic.length) s+=` 다른 학생 대부분이 맞힌 ${c.basic.join(", ")}번을 틀려 기본기 점검이 필요합니다.`;
+  const wg=diag.filter(d=>d.p<100).slice(0,2).map(d=>d.k);
+  if(wg.length) s+=` 문법은 ${wg.join(", ")} 부분을 다시 정리해야 합니다.`;
+  return s;
+}
+function nextTasks(r,c,diag,weak){
+  const out=[];
+  diag.filter(d=>d.p<100).slice(0,2).forEach(d=>out.push(`${d.k} 규칙 정리 후 관련 문항(${d.wrong.join(", ")}) 다시 풀기`));
+  weak.slice(0,1).forEach(x=>out.push(tipFor(x.a)));
+  if(c.basic.length) out.push(`기본 문항 ${c.basic.join(", ")}번 오답 원인 확인(실수인지 개념 부족인지)`);
+  const essMiss=r.essays.flatMap(s=>s.detail.filter(d=>d.how!=="hit").map(d=>d.label.replace(/^\((\d)\)\s*/,"").split(" ").slice(0,6).join(" ")));
+  if(essMiss.length) out.push(`서술형 모범답안 ${Math.min(essMiss.length,4)}문장 3회 쓰기`);
+  return out.slice(0,4);
+}
+function renderReport(r,el,rows){
   const total=r.essayFinal!=null?+(r.mcqScore+r.essayFinal).toFixed(1):r.total;
   const pct=Math.round(total); const R=56, C=2*Math.PI*R;
   const areaRows=Object.entries(r.areas).map(([a,v])=>{const p=v.max?Math.round(v.got/v.max*100):0; return {a,p,got:v.got,max:v.max,wrong:v.wrong}});
@@ -507,22 +593,29 @@ function renderReport(r,el){
   const weak=areaRows.filter(x=>x.p<=65).sort((x,y)=>x.p-y.p);
   const wrongItems=r.items.filter(i=>!i.ok);
   const level=pct>=90?"A":pct>=80?"B":pct>=70?"C":pct>=60?"D":"E";
+  const c=cohort(r,rows||[]); const diag=grammarDiag(r); const tasks=nextTasks(r,c,diag,weak);
+  const cohortHtml=c.n>=2?`<div class="cohort"><b>같은 시험 응시자 ${c.n}명 중 ${c.rank}등</b> · ${c.n>=5?`상위 ${c.top}% · `:""}평균 ${c.avg}점 대비 <b style="color:${total-c.avg>=0?"var(--ok)":"var(--bad)"}">${total-c.avg>=0?"+":""}${(total-c.avg).toFixed(1)}점</b>${c.basic.length?`<br><span class="badge">기본기 점검</span> 다른 학생 대부분(70%↑)이 맞힌 문항을 틀림: ${c.basic.join(", ")}번`:""}${c.hardAll.length?`<br><span class="badge ok">함께 어려웠던 문항</span> ${c.hardAll.join(", ")}번 (정답률 40% 미만)`:""}</div>`:`<div class="cohort mute">아직 이 시험을 본 다른 학생이 없어 평균·순위는 표시되지 않습니다.</div>`;
+  const diagHtml=diag.length?`<div class="diag"><div class="ttl">문법 포인트별 진단</div>${diag.map(d=>`<div class="drow ${d.p<50?"bad":d.p===100?"ok":""}"><span>${esc(d.k)}</span><i>${d.ok}/${d.tot}</i><b>${d.p===100?"○":d.p===0?"✕":"△"}</b></div>`).join("")}</div>`:"";
   el.innerHTML=`<div class="report">
     <div class="head"><div class="t"><small>${esc(CONFIG.ACADEMY)} · 내신 실전 모의고사</small>${esc(r.examTitle)}</div>
-      <div class="who"><b>${esc(r.name)}</b><br>${esc([r.school,r.cls].filter(Boolean).join(" "))}<br>${new Date(r.ts).toLocaleDateString("ko-KR")}</div></div>
+      <div class="who"><b>${esc(r.name)}</b><br>${esc([levelLabel(r.school),r.cls].filter(Boolean).join(" "))}<br>${new Date(r.ts).toLocaleDateString("ko-KR")}</div></div>
     <div class="body">
       <div class="score">
-        <div class="dial"><svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="${R}" fill="none" stroke="#f3efe4" stroke-width="12"/><circle cx="66" cy="66" r="${R}" fill="none" stroke="${pct>=80?"#2e7d32":pct>=60?"#d4a017":"#c62828"}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/></svg>
+        <div class="dial"><svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="${R}" fill="none" stroke="#f3efe4" stroke-width="12"/><circle cx="66" cy="66" r="${R}" fill="none" stroke="${pct>=80?"#2e7d32":pct>=60?"#d4a017":"#ed3038"}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/></svg>
           <div class="n"><div><b>${total%1?total.toFixed(1):total}</b><small>/ 100점 · ${level}등급권</small></div></div></div>
-        <div class="split">선다형 <b>${r.mcqScore%1?r.mcqScore.toFixed(1):r.mcqScore}</b> / ${r.mcqMax}점<br>서술형 <b>${r.essayFinal!=null?r.essayFinal:r.essayAuto}</b> / ${r.essayMax}점 ${r.essayFinal!=null?'<span class="badge ok">선생님 확정</span>':(r.essayPending>0?'<span class="badge">가채점 · 선생님 확인 중</span>':'')}<br>풀이 시간 <b>${Math.floor(r.elapsed/60)}분</b></div>
+        <div class="split">선다형 <b>${r.mcqScore%1?r.mcqScore.toFixed(1):r.mcqScore}</b> / ${r.mcqMax}점<br>서술형 <b>${r.essayFinal!=null?r.essayFinal:r.essayAuto}</b> / ${r.essayMax}점 ${r.essayFinal!=null?'<span class="badge ok">선생님 확정</span>':'<span class="badge">자동채점</span>'}<br>풀이 시간 <b>${Math.floor(r.elapsed/60)}분</b></div>
       </div>
+      ${cohortHtml}
       <div class="areas">${areaRows.map(x=>`<div class="area ${x.p>=80?"strong":x.p<=65?"weak":""}"><span>${esc(shortArea(x.a))}</span><div class="bar"><i style="width:${x.p}%"></i></div><b>${x.p}%</b></div>`).join("")}</div>
+      ${diagHtml}
       <div class="verdict">
-        ${strong.length?`<p><span class="tag">강점</span>${esc(strong.join(", "))} — 안정적입니다.</p>`:""}
-        ${weak.length?weak.slice(0,2).map(x=>`<p><span class="tag">보완</span>${esc(shortArea(x.a))} ${x.p}% (틀린 문항 ${x.wrong.join(", ")}) → ${esc(tipFor(x.a))}</p>`).join(""):`<p><span class="tag">보완</span>전 영역 65% 이상 — 틀린 문항 근거 문장만 다시 확인하면 됩니다.</p>`}
+        <p><span class="tag">총평</span>${esc(verdictText(r,c,diag,weak))}</p>
+        ${strong.length?`<p><span class="tag">강점</span>${esc(strong.join(", "))}</p>`:""}
+        ${weak.length?weak.slice(0,2).map(x=>`<p><span class="tag">보완</span>${esc(shortArea(x.a))} ${x.p}% (틀린 문항 ${x.wrong.join(", ")}) → ${esc(tipFor(x.a))}</p>`).join(""):""}
+        ${tasks.length?`<p><span class="tag">다음 과제</span></p><ol class="tasks">${tasks.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:""}
       </div>
       <div class="wrong" style="margin-bottom:10px"><table><tr><th>서술형</th><th>내 답</th><th>정답</th><th>점수</th></tr>${r.essays.flatMap(s=>s.detail.map(d=>`<tr><td>${s.n}${d.label.match(/^\(\d\)/)?d.label.match(/^\(\d\)/)[0]:""}</td><td style="color:${d.how==="hit"?"var(--ok)":"var(--bad)"}">${esc(d.my||"")||"<span class='mute'>무응답</span>"}</td><td>${esc(d.label.replace(/^\(\d\)\s*/,""))}</td><td>${d.got}/${d.pts}</td></tr>`)).join("")}</table></div>
-      ${wrongItems.length?`<div class="wrong"><table><tr><th>번호</th><th>문항</th><th>내 답</th><th>정답</th></tr>${wrongItems.map(i=>`<tr><td>${i.n}</td><td>${esc(i.q.replace(/\[\[|\]\]/g,""))}</td><td style="color:var(--bad)">${i.my?CIRC[i.my-1]:"무응답"}</td><td style="color:var(--ok);font-weight:700">${CIRC[i.answer-1]}</td></tr>`).join("")}</table></div>`:`<div class="wrong">선다형 전 문항 정답 🎉</div>`}
+      ${wrongItems.length?`<div class="wrong"><table><tr><th>번호</th><th>문항</th><th>내 답</th><th>정답</th>${c.n>=2?"<th>정답률</th>":""}</tr>${wrongItems.map(i=>`<tr><td>${i.n}</td><td>${esc(i.q.replace(/\[\[|\]\]/g,""))}</td><td style="color:var(--bad)">${i.my?CIRC[i.my-1]:"무응답"}</td><td style="color:var(--ok);font-weight:700">${CIRC[i.answer-1]}</td>${c.n>=2?`<td>${c.rate[i.n]!=null?c.rate[i.n]+"%":"-"}</td>`:""}</tr>`).join("")}</table></div>`:`<div class="wrong">선다형 전 문항 정답 🎉</div>`}
     </div>
     <div class="foot"><span>${esc(CONFIG.ACADEMY)}</span><span>${wrongItems.length}문항 오답 · 결과 ID ${r.id}</span></div>
   </div>`;
@@ -544,7 +637,11 @@ function kakaoText(r){
   const ess=r.essays.map(s=>s.detail.map(d=>`${s.n}${(d.label.match(/^\(\d\)/)||[""])[0]}${d.how==="hit"?"○":"✕"}`).join(" ")).join("  ");
   const strong=rows.filter(x=>x.p>=80).map(x=>shortArea(x.a)).join(", ");
   const weak=rows.filter(x=>x.p<=65).sort((x,y)=>x.p-y.p).slice(0,2).map(x=>`· ${shortArea(x.a)} ${x.p}% (틀린 문항 ${x.wrong.join(", ")}) → ${tipFor(x.a)}`).join("\n")||"· 전 영역 65% 이상 — 틀린 문항의 근거 문장만 다시 확인하면 됩니다";
-  return `[${CONFIG.ACADEMY} 모의 내신고사 결과]\n${r.name} (${levelLabel(r.school)}${r.cls?" "+r.cls:""}) · ${new Date(r.ts).toLocaleDateString("ko-KR")}\n시험: ${r.examTitle}\n\n▶ 총점 ${total}점 / 100\n  선다형 ${r.mcqScore}/${r.mcqMax}점 · 서술형 ${ef}/${r.essayMax}점${r.essayFinal!=null?"":" (가채점)"}\n\n▶ 영역별\n${areas}\n\n▶ 틀린 문항: ${wrong}\n▶ 서술형: ${ess}\n${strong?`\n▶ 강점: ${strong}`:""}\n\n▶ 보완할 점\n${weak}`;
+  const c=cohort(r,T.rows||[]); const diag=grammarDiag(r); const tasks=nextTasks(r,c,diag,rows.filter(x=>x.p<=65).sort((x,y)=>x.p-y.p));
+  const pos=c.n>=2?`\n▶ 같은 시험 ${c.n}명 중 ${c.rank}등${c.n>=5?` (상위 ${c.top}%)`:""} · 평균 ${c.avg}점 대비 ${total-c.avg>=0?"+":""}${(total-c.avg).toFixed(1)}점${c.basic.length?`\n  기본기 점검: ${c.basic.join(", ")}번 (다른 학생 대부분 정답)`:""}`:"";
+  const dg=diag.length?`\n\n▶ 문법 포인트\n${diag.map(d=>`· ${d.k} ${d.ok}/${d.tot} ${d.p===100?"○":d.p===0?"✕":"△"}`).join("\n")}`:"";
+  const tk=tasks.length?`\n\n▶ 다음 과제\n${tasks.map((x,i)=>`${i+1}. ${x}`).join("\n")}`:"";
+  return `[${CONFIG.ACADEMY} 모의 내신고사 결과]\n${r.name} (${levelLabel(r.school)}${r.cls?" "+r.cls:""}) · ${new Date(r.ts).toLocaleDateString("ko-KR")}\n시험: ${r.examTitle}\n\n▶ 총점 ${total}점 / 100\n  선다형 ${r.mcqScore}/${r.mcqMax}점 · 서술형 ${ef}/${r.essayMax}점${r.essayFinal!=null?"":" (가채점)"}\n\n▶ 영역별\n${areas}\n\n▶ 틀린 문항: ${wrong}\n▶ 서술형: ${ess}\n${strong?`\n▶ 강점: ${strong}`:""}\n\n▶ 보완할 점\n${weak}${dg}${tk}\n\n▶ 총평\n${verdictText(r,c,diag,rows.filter(x=>x.p<=65))}`;
 }
 /* ================= STORAGE / API ================= */
 function saveLocal(r){ try{const k="hailey_results"; const all=JSON.parse(localStorage.getItem(k)||"[]"); const i=all.findIndex(x=>x.id===r.id); if(i>=0)all[i]=r; else all.push(r); localStorage.setItem(k,JSON.stringify(all.slice(-500)));}catch(e){} }
@@ -622,7 +719,7 @@ function openGrade(id){
         <div class="row" style="margin-top:6px"><span>점수</span><input type="number" step="0.5" min="0" max="${e.pts}" value="${cur}" data-n="${e.n}"> <span class="mute">/ ${e.pts} · 자동 ${s.auto}</span></div></div>`}).join("");
   $("#gClose").onclick=()=>p.classList.add("hide");
   $("#gCopy").onclick=async()=>{ const txt=kakaoText(r); let ta=p.querySelector("textarea.kakao"); if(!ta){ta=document.createElement("textarea"); ta.className="ans kakao"; ta.style.minHeight="240px"; ta.style.marginTop="10px"; p.appendChild(ta);} ta.value=txt; try{ await navigator.clipboard.writeText(txt); toast("복사됨 — 카톡에 붙여넣으세요"); }catch(e){ ta.select(); toast("아래 상자에서 복사하세요"); } };
-  $("#gReport").onclick=()=>{const w=document.createElement("div"); w.className="card"; renderReport(r,w); p.appendChild(w); const b=document.createElement("button"); b.className="btn sm"; b.textContent="이미지 저장"; b.onclick=async()=>{const c=await html2canvas(w.querySelector(".report"),{scale:2,backgroundColor:"#fff"}); const a=document.createElement("a"); a.href=c.toDataURL("image/png"); a.download=`${r.name}_리포트.png`; a.click()}; w.prepend(b)};
+  $("#gReport").onclick=()=>{const w=document.createElement("div"); w.className="card"; renderReport(r,w,T.rows); p.appendChild(w); const b=document.createElement("button"); b.className="btn sm"; b.textContent="이미지 저장"; b.onclick=async()=>{const c=await html2canvas(w.querySelector(".report"),{scale:2,backgroundColor:"#fff"}); const a=document.createElement("a"); a.href=c.toDataURL("image/png"); a.download=`${r.name}_리포트.png`; a.click()}; w.prepend(b)};
   $("#gSave").onclick=async()=>{let sum=0; p.querySelectorAll("input[type=number]").forEach(i=>{const n=+i.dataset.n; const v=Math.min(+i.max,Math.max(0,+i.value||0)); const s=r.essays.find(x=>x.n===n); if(s){s.final=v} sum+=v});
     r.essayFinal=+sum.toFixed(1); r.essayPending=0; r.status="확정"; r.total=+(r.mcqScore+r.essayFinal).toFixed(1);
     r.areas["서술형"]={...r.areas["서술형"],got:r.essayFinal}; saveLocal(r);
